@@ -8,15 +8,18 @@ document.addEventListener('DOMContentLoaded', function () {
     var status = camera.querySelector('[data-camera-status]');
     var startButton = camera.querySelector('[data-camera-start]');
     var captureButton = camera.querySelector('[data-camera-capture]');
+    var fallbackButton = camera.querySelector('[data-camera-fallback]');
     var stopButton = camera.querySelector('[data-camera-stop]');
     var photos = [];
     var stream = null;
+    var cameraReady = false;
 
     function stopCamera() {
       if (stream) stream.getTracks().forEach(function (track) { track.stop(); });
       stream = null;
       video.srcObject = null;
       video.hidden = true;
+      cameraReady = false;
       captureButton.disabled = true;
       stopButton.hidden = true;
       startButton.hidden = false;
@@ -47,16 +50,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function syncFiles() {
+      if (typeof DataTransfer === 'undefined') {
+        status.textContent = 'This browser cannot prepare camera photos for submission.';
+        return false;
+      }
       var transfer = new DataTransfer();
       photos.forEach(function (photo, index) {
         transfer.items.add(new File([photo], 'camera-' + (index + 1) + '.jpg', { type: photo.type }));
       });
       input.files = transfer.files;
+      return true;
     }
 
     startButton.addEventListener('click', function () {
+      if (!window.isSecureContext) {
+        status.textContent = 'Camera access requires HTTPS. Use the Phone Camera button below.';
+        return;
+      }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        status.textContent = 'Camera access is not supported by this browser.';
+        status.textContent = 'Live camera is not supported. Use the Phone Camera button below.';
         return;
       }
       navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
@@ -64,20 +76,30 @@ document.addEventListener('DOMContentLoaded', function () {
           stream = newStream;
           video.srcObject = stream;
           video.hidden = false;
-          captureButton.disabled = false;
           startButton.hidden = true;
           stopButton.hidden = false;
-          status.textContent = 'Camera ready. You can take up to 10 photos.';
+          video.onloadedmetadata = function () {
+            cameraReady = true;
+            captureButton.disabled = false;
+            status.textContent = 'Camera ready. You can take up to 10 photos.';
+          };
         })
-        .catch(function () {
-          status.textContent = 'Camera permission was denied or the camera is unavailable.';
+        .catch(function (error) {
+          var message = error && error.name === 'NotAllowedError'
+            ? 'Camera permission was denied. Allow camera access and try again.'
+            : 'The camera is unavailable. Use the Phone Camera button below.';
+          status.textContent = message;
         });
     });
 
     captureButton.addEventListener('click', function () {
-      if (!stream || photos.length >= 10) return;
+      if (!stream || !cameraReady || photos.length >= 10) return;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      if (!canvas.width || !canvas.height) {
+        status.textContent = 'The camera is not ready yet. Please try again.';
+        return;
+      }
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(function (blob) {
         if (blob) {
@@ -87,6 +109,22 @@ document.addEventListener('DOMContentLoaded', function () {
           status.textContent = photos.length + ' photo(s) ready.';
         }
       }, 'image/jpeg', 0.9);
+    });
+
+    fallbackButton.addEventListener('click', function () {
+      input.click();
+    });
+
+    input.addEventListener('change', function () {
+      var selected = Array.from(input.files || []);
+      if (selected.length > 10) {
+        input.value = '';
+        status.textContent = 'Please take a maximum of 10 photos.';
+        return;
+      }
+      photos = selected;
+      renderPhotos();
+      status.textContent = photos.length + ' photo(s) ready.';
     });
 
     stopButton.addEventListener('click', stopCamera);

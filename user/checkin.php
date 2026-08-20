@@ -92,9 +92,10 @@ require_once __DIR__ . '/../includes/header.php';
               <div class="d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-outline-primary" data-camera-start><i class="bi bi-camera-video"></i> Start Camera</button>
                 <button type="button" class="btn btn-brand" data-camera-capture disabled><i class="bi bi-camera"></i> Take Photo</button>
+                <button type="button" class="btn btn-outline-primary" data-camera-fallback><i class="bi bi-phone"></i> Use Phone Camera</button>
                 <button type="button" class="btn btn-outline-secondary" data-camera-stop hidden><i class="bi bi-stop-circle"></i> Stop Camera</button>
               </div>
-              <input type="file" name="photos[]" accept="image/jpeg,image/png" multiple hidden data-camera-input>
+              <input type="file" name="photos[]" accept="image/jpeg,image/png" capture="environment" multiple hidden data-camera-input>
               <canvas class="camera-canvas" data-camera-canvas hidden></canvas>
               <div class="photo-preview-wrap" data-camera-preview></div>
             </div>
