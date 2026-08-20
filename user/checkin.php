@@ -80,14 +80,24 @@ require_once __DIR__ . '/../includes/header.php';
       <div class="card-body">
         <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
         <p class="text-muted">Check-in time will be recorded automatically as the current date & time when you submit.</p>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" data-camera-form>
           <?= csrfField() ?>
           <input type="hidden" name="toilet_id" value="<?= (int)$toiletId ?>">
 
-          <div class="mb-3">
-            <label class="form-label">Photos of toilet condition (before) <span class="text-muted">— you may select multiple</span></label>
-            <input type="file" name="photos[]" class="form-control" accept="image/*" capture="environment" multiple data-preview="checkinPreview">
-            <div id="checkinPreview" class="photo-preview-wrap"></div>
+          <div class="mb-3" data-camera="checkin">
+            <label class="form-label">Photos of toilet condition (before)</label>
+            <div class="camera-box">
+              <video class="camera-video" data-camera-video autoplay playsinline muted hidden></video>
+              <p class="text-muted small mb-2" data-camera-status>Click start camera to take photos.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary" data-camera-start><i class="bi bi-camera-video"></i> Start Camera</button>
+                <button type="button" class="btn btn-brand" data-camera-capture disabled><i class="bi bi-camera"></i> Take Photo</button>
+                <button type="button" class="btn btn-outline-secondary" data-camera-stop hidden><i class="bi bi-stop-circle"></i> Stop Camera</button>
+              </div>
+              <input type="file" name="photos[]" accept="image/jpeg,image/png" multiple hidden data-camera-input>
+              <canvas class="camera-canvas" data-camera-canvas hidden></canvas>
+              <div class="photo-preview-wrap" data-camera-preview></div>
+            </div>
           </div>
 
           <div class="mb-3">
