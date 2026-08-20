@@ -4,9 +4,9 @@
  * Update these 4 constants for your environment.
  */
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'toilet_monitor');
-define('DB_USER', 'root');
-define('DB_PASS', '0044');
+define('DB_NAME', 'synergy1_charmainechiavernxuan_toilet_cleanliness');
+define('DB_USER', 'synergy1_yenping');
+define('DB_PASS', 'R.zb0ZwEuGZ}*fW2');
 
 function getDB(): PDO {
     static $pdo = null;
